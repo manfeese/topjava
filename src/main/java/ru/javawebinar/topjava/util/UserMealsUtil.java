@@ -31,11 +31,9 @@ public class UserMealsUtil {
 
         return mealList.stream()
                 .filter(meal -> TimeUtil.isBetween(meal.getTime(), startTime, endTime))
-                .map(meal -> new UserMealWithExceed(
-                            meal.getDateTime(),
-                            meal.getDescription(),
-                            meal.getCalories(),
-                            caloriesByDays.get(meal.getDate()) > caloriesPerDay))
+                .map(meal -> toUserMealWithExceed(
+                                meal,
+                                caloriesByDays.get(meal.getDate()) > caloriesPerDay))
                 .collect(Collectors.toList());
     }
 
@@ -51,13 +49,87 @@ public class UserMealsUtil {
         List<UserMealWithExceed> userMealWithExceedList = new ArrayList<>();
         for (UserMeal userMeal : mealList) {
             if (TimeUtil.isBetween(userMeal.getTime(), startTime, endTime)) {
-                userMealWithExceedList.add(new UserMealWithExceed(
-                        userMeal.getDateTime(),
-                        userMeal.getDescription(),
-                        userMeal.getCalories(),
-                        caloriesByDays.get(userMeal.getDate()) > caloriesPerDay));
+                userMealWithExceedList.add(
+                        toUserMealWithExceed(
+                                userMeal,
+                                caloriesByDays.get(userMeal.getDate()) > caloriesPerDay));
             }
         }
         return userMealWithExceedList;
     }
+
+    public static List<UserMealWithExceed> getFilteredWithExceededOptional2(List<UserMeal> mealList, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
+
+        List<UserMealWithExceed> userMealWithExceedList = new ArrayList<>();
+        /*
+        * key - Date of meal
+        * value Pair<key, value>
+        *           key - totalCaloriesPerDay
+        *           value - List of objects Pair<key, value>
+        *                                       key - index of meal int mealList
+        *                                       value - index of mealWithExceed in userMealWithExceedList
+        * */
+        Map<LocalDate, Pair<Integer, List<Pair<Integer, Integer>>>> mealsByDayWithTotalCalories = new HashMap<>();
+
+        for (int userMealIndex = 0; userMealIndex < mealList.size(); userMealIndex++) {
+
+            UserMeal userMeal = mealList.get(userMealIndex);
+
+            LocalDate mealDate = userMeal.getDate();
+            Pair<Integer, List<Pair<Integer, Integer>>> keyValue =
+                    mealsByDayWithTotalCalories.getOrDefault(
+                        mealDate,
+                        new Pair<>(0, new ArrayList<>()));
+
+            /*
+            * summing calories
+            */
+            keyValue.key += userMeal.getCalories();
+            boolean exeed = keyValue.key > caloriesPerDay;
+
+            if (TimeUtil.isBetween(userMeal.getTime(), startTime, endTime)) {
+                userMealWithExceedList.add(toUserMealWithExceed(userMeal, exeed));
+                if (!exeed) {
+                    int userMealWithExceedIndex = userMealWithExceedList.size() - 1;
+                    keyValue.value.add(new Pair<>(userMealIndex, userMealWithExceedIndex));
+                }
+            }
+
+            /*
+             * edit userMealWithExceedList
+             */
+            if (exeed && keyValue.value.size() > 0) {
+                for (Pair<Integer, Integer> indexesPair : keyValue.value) {
+                    userMealWithExceedList.set(indexesPair.value, toUserMealWithExceed(
+                            mealList.get(indexesPair.key),
+                            exeed
+                    ));
+                }
+                keyValue.value.clear();
+            }
+
+            mealsByDayWithTotalCalories.put(mealDate, keyValue);
+        }
+
+        return userMealWithExceedList;
+    }
+
+    public static UserMealWithExceed toUserMealWithExceed(UserMeal userMeal, boolean exeed) {
+        return new UserMealWithExceed(
+                userMeal.getDateTime(),
+                userMeal.getDescription(),
+                userMeal.getCalories(),
+                exeed);
+    }
+
+    private static class Pair<K, V> {
+        K key;
+        V value;
+
+        public Pair(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
+
 }
