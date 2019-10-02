@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class UserMealsUtil {
@@ -60,55 +61,31 @@ public class UserMealsUtil {
 
     public static List<UserMealWithExceed> getFilteredWithExceededOptional2(List<UserMeal> mealList, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
 
-        List<UserMealWithExceed> userMealWithExceedList = new ArrayList<>();
-        /*
-        * key - Date of meal
-        * value Pair<key, value>
-        *           key - totalCaloriesPerDay
-        *           value - List of objects Pair<key, value>
-        *                                       key - index of meal int mealList
-        *                                       value - index of mealWithExceed in userMealWithExceedList
-        * */
-        Map<LocalDate, Pair<Integer, List<Pair<Integer, Integer>>>> mealsByDayWithTotalCalories = new HashMap<>();
+        List<UserMealWithExceed> userMealWithExceedList = Collections.synchronizedList(new ArrayList<>());
+        Map<LocalDate, Integer> caloriesByDays = new HashMap<>();
+        LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
 
-        for (int userMealIndex = 0; userMealIndex < mealList.size(); userMealIndex++) {
+        for (UserMeal userMeal: mealList) {
 
-            UserMeal userMeal = mealList.get(userMealIndex);
-
-            LocalDate mealDate = userMeal.getDate();
-            Pair<Integer, List<Pair<Integer, Integer>>> keyValue =
-                    mealsByDayWithTotalCalories.getOrDefault(
-                        mealDate,
-                        new Pair<>(0, new ArrayList<>()));
-
-            /*
-            * summing calories
-            */
-            keyValue.key += userMeal.getCalories();
-            boolean exeed = keyValue.key > caloriesPerDay;
+            caloriesByDays.merge(
+                    userMeal.getDate(),
+                    userMeal.getCalories(),
+                    Integer::sum);
 
             if (TimeUtil.isBetween(userMeal.getTime(), startTime, endTime)) {
-                userMealWithExceedList.add(toUserMealWithExceed(userMeal, exeed));
-                if (!exeed) {
-                    int userMealWithExceedIndex = userMealWithExceedList.size() - 1;
-                    keyValue.value.add(new Pair<>(userMealIndex, userMealWithExceedIndex));
-                }
+                queue.add(() -> userMealWithExceedList.add(
+                                    toUserMealWithExceed(
+                                        userMeal,
+                                        caloriesByDays.get(userMeal.getDate()) > caloriesPerDay)));
             }
 
-            /*
-             * edit userMealWithExceedList
-             */
-            if (exeed && keyValue.value.size() > 0) {
-                for (Pair<Integer, Integer> indexesPair : keyValue.value) {
-                    userMealWithExceedList.set(indexesPair.value, toUserMealWithExceed(
-                            mealList.get(indexesPair.key),
-                            exeed
-                    ));
-                }
-                keyValue.value.clear();
-            }
+        }
 
-            mealsByDayWithTotalCalories.put(mealDate, keyValue);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 2, 0L, TimeUnit.MILLISECONDS, queue);
+        executor.prestartAllCoreThreads();
+        executor.shutdown();
+
+        while (!executor.isTerminated()) {
         }
 
         return userMealWithExceedList;
@@ -120,16 +97,6 @@ public class UserMealsUtil {
                 userMeal.getDescription(),
                 userMeal.getCalories(),
                 exeed);
-    }
-
-    private static class Pair<K, V> {
-        K key;
-        V value;
-
-        public Pair(K key, V value) {
-            this.key = key;
-            this.value = value;
-        }
     }
 
 }
