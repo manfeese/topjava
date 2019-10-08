@@ -13,45 +13,57 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import ru.javawebinar.topjava.repository.MealRepository;
-import ru.javawebinar.topjava.repository.MealRepositoryImpl;
+import ru.javawebinar.topjava.repository.RamMealRepository;
 import ru.javawebinar.topjava.util.MealsUtil;
 import ru.javawebinar.topjava.model.*;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class MealServlet extends HttpServlet {
+    private static final String MEAL_LIST = "/meals.jsp";
+    private static final String INSERT_OR_EDIT = "/meal.jsp";
     private static final Logger log = getLogger(MealServlet.class);
-    private final static String MEAL_LIST = "/meals.jsp";
-    private final static String INSERT_OR_EDIT = "/meal.jsp";
-    private final MealRepository mealRepository = MealRepositoryImpl.of(MealsUtil.getMealList());
+    private MealRepository mealRepository;
+
+    @Override
+    public void init() throws ServletException {
+        mealRepository = RamMealRepository.getInstance();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         log.debug("redirect to meals");
 
-        String action = request.getParameter("action");
-        if ("delete".equalsIgnoreCase(action)) {
-            long id = Long.parseLong(request.getParameter("id"));
-            mealRepository.delete(id);
-            response.sendRedirect("meals");
-            return;
-        }
-
         String forward;
-        if ("update".equalsIgnoreCase(action)) {
-            forward = INSERT_OR_EDIT;
-            long id = Long.parseLong(request.getParameter("id"));
-            Meal meal = mealRepository.findById(id);
-            request.setAttribute("meal", meal);
-        } else if ("insert".equalsIgnoreCase(action)) {
-            forward = INSERT_OR_EDIT;
-            LocalDateTime dateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
-            request.setAttribute("meal", new Meal(dateTime, "", 0));
-        } else {
-            forward = MEAL_LIST;
-            List<MealTo> mealsTo = MealsUtil.getFiltered(mealRepository.findAll(),
-                    LocalTime.MIN, LocalTime.MAX, MealsUtil.DEFAULT_CALORIES_PER_DAY);
-            request.setAttribute("meals", mealsTo);
+        String action = request.getParameter("action");
+        action = action == null ? "" : action.toLowerCase();
+
+        switch (action) {
+            case "delete": {
+                long id = Long.parseLong(request.getParameter("id"));
+                mealRepository.delete(id);
+                response.sendRedirect("meals");
+                return;
+            }
+            case "update": {
+                forward = INSERT_OR_EDIT;
+                long id = Long.parseLong(request.getParameter("id"));
+                Meal meal = mealRepository.findById(id);
+                request.setAttribute("meal", meal);
+                break;
+            }
+            case "insert": {
+                forward = INSERT_OR_EDIT;
+                LocalDateTime dateTime = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+                request.setAttribute("meal", new Meal(dateTime, "", 0));
+                break;
+            }
+            default: {
+                forward = MEAL_LIST;
+                List<MealTo> mealsTo = MealsUtil.getFiltered(mealRepository.findAll(),
+                        LocalTime.MIN, LocalTime.MAX, MealsUtil.DEFAULT_CALORIES_PER_DAY);
+                request.setAttribute("meals", mealsTo);
+            }
         }
 
         RequestDispatcher dispatcher = request.getRequestDispatcher(forward);

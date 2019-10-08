@@ -25,8 +25,8 @@
                     <td>${meal.dateTime.format(TimeUtil.DATE_TIME_FORMATTER)}</td>
                     <td>${meal.description}</td>
                     <td>${meal.calories}</td>
-                    <td><a href="meals?action=update&id=<c:out value="${meal.id}"/>">Update</a></td>
-                    <td><a href="meals?action=delete&id=<c:out value="${meal.id}"/>">Delete</a></td>
+                    <td><a href="meals?action=update&id=${meal.id}">Update</a></td>
+                    <td><a href="meals?action=delete&id=${meal.id}">Delete</a></td>
                 </tr>
             </c:forEach>
         </tbody>

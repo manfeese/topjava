@@ -35,6 +35,17 @@ public class MealsUtil {
                 .collect(Collectors.toList());
     }
 
+    public static Meal getCopy(Meal meal) {
+        if (meal == null) {
+            return null;
+        }
+        Meal copyOfMeal = new Meal(
+                meal.getDateTime(),
+                meal.getDescription(),
+                meal.getCalories());
+        copyOfMeal.setId(meal.getId());
+        return copyOfMeal;
+    }
     private static MealTo createTo(Meal meal, boolean excess) {
         return new MealTo(meal.getId(),
                 meal.getDateTime(),
