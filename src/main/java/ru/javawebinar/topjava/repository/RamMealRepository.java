@@ -6,47 +6,21 @@ import ru.javawebinar.topjava.util.MealsUtil;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
-public class RamMealRepository implements MealRepository {
+public class RamMealRepository implements Repository<Meal> {
 
     private final AtomicLong idCounter = new AtomicLong(0L);
     private final Map<Long, Meal> meals = new ConcurrentHashMap<>();
 
-    private RamMealRepository() {
-        MealsUtil.getMealList().forEach(this::save);
-    }
-
-    private static class RamMealRepositorySingleton {
-        private static final RamMealRepository INSTANCE = new RamMealRepository();
-    }
-
-    public static RamMealRepository getInstance() {
-        return RamMealRepositorySingleton.INSTANCE;
-    }
-
     @Override
     public Meal save(Meal meal) {
-        long id = meal.getId();
-
-        // create operation
-        if (id == 0) {
-            id = idCounter.incrementAndGet();
-            meal.setId(id);
-            meals.put(id, meal);
-            return MealsUtil.getCopy(meal);
-        }
-
-        // update operation
-        Meal oldValue;
-        if ((oldValue = meals.get(id)) != null) {
-            if (oldValue.nonEquals(meal)) {
-                meals.put(id, meal);
-                return MealsUtil.getCopy(meal);
-            } else {
-                return MealsUtil.getCopy(oldValue);
-            }
+        if (meal.getId() == 0) {
+            meal.setId(idCounter.incrementAndGet());
+            meals.put(meal.getId(), MealsUtil.getCopy(meal));
+            return meal;
         } else {
-            return null;
+            return (meals.replace(meal.getId(), MealsUtil.getCopy(meal)) == null) ? null : meal;
         }
     }
 
@@ -57,7 +31,9 @@ public class RamMealRepository implements MealRepository {
 
     @Override
     public List<Meal> findAll() {
-        return new ArrayList<>(meals.values());
+        return meals.values().stream()
+                .map(MealsUtil::getCopy)
+                .collect(Collectors.toList());
     }
 
     @Override

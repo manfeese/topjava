@@ -12,7 +12,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 import org.slf4j.Logger;
-import ru.javawebinar.topjava.repository.MealRepository;
+import ru.javawebinar.topjava.repository.Repository;
 import ru.javawebinar.topjava.repository.RamMealRepository;
 import ru.javawebinar.topjava.util.MealsUtil;
 import ru.javawebinar.topjava.model.*;
@@ -23,11 +23,12 @@ public class MealServlet extends HttpServlet {
     private static final String MEAL_LIST = "/meals.jsp";
     private static final String INSERT_OR_EDIT = "/meal.jsp";
     private static final Logger log = getLogger(MealServlet.class);
-    private MealRepository mealRepository;
+    private Repository mealRepository;
 
     @Override
     public void init() throws ServletException {
-        mealRepository = RamMealRepository.getInstance();
+        mealRepository = new RamMealRepository();
+        MealsUtil.getMealList().forEach(mealRepository::save);
     }
 
     @Override
@@ -48,7 +49,7 @@ public class MealServlet extends HttpServlet {
             case "update": {
                 forward = INSERT_OR_EDIT;
                 long id = Long.parseLong(request.getParameter("id"));
-                Meal meal = mealRepository.findById(id);
+                Meal meal = (Meal)mealRepository.findById(id);
                 request.setAttribute("meal", meal);
                 break;
             }
