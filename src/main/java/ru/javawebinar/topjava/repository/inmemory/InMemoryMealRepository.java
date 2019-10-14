@@ -6,11 +6,10 @@ import org.springframework.stereotype.Repository;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
 import ru.javawebinar.topjava.util.DateTimeUtil;
+import ru.javawebinar.topjava.util.MealsUtil;
 
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
@@ -18,9 +17,16 @@ import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryMealRepository implements MealRepository {
-    private static final Logger log = LoggerFactory.getLogger(InMemoryUserRepository.class);
-    private Map<Integer, Meal> repository = new ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(InMemoryMealRepository.class);
+    private Map<Integer, Map<Integer, Meal>> repository = new ConcurrentHashMap<>();
     private AtomicInteger counter = new AtomicInteger(0);
+
+    {
+        MealsUtil.MEALS.forEach(meal -> {
+            save(new Meal(meal.getDateTime(), meal.getDescription(), meal.getCalories()), 1);
+            save(new Meal(meal.getDateTime(), meal.getDescription(), meal.getCalories()), 2);
+        });
+    }
 
     @Override
     public Meal save(Meal meal, int userId) {
@@ -28,7 +34,7 @@ public class InMemoryMealRepository implements MealRepository {
             log.info("save {}", meal);
             meal.setUserId(userId);
             meal.setId(counter.incrementAndGet());
-            repository.put(meal.getId(), meal);
+            getRepositoryByUser(userId).put(meal.getId(), meal);
             return meal;
         }
 
@@ -36,7 +42,7 @@ public class InMemoryMealRepository implements MealRepository {
         if (getByUser(meal.getId(), userId) != null) {
             log.info("update {}", meal);
             meal.setUserId(userId);
-            return repository.put(meal.getId(), meal);
+            return getRepositoryByUser(userId).put(meal.getId(), meal);
         }
         return null;
     }
@@ -45,7 +51,7 @@ public class InMemoryMealRepository implements MealRepository {
     public boolean delete(int id, int userId) {
         if (getByUser(id, userId) != null) {
             log.info("delete {}", id);
-            return repository.remove(id) != null;
+            return getRepositoryByUser(userId).remove(id) != null;
         }
         return false;
     }
@@ -59,18 +65,17 @@ public class InMemoryMealRepository implements MealRepository {
     @Override
     public List<Meal> getAll(int userId) {
         log.info("getAll");
-        return getAllByFilter(userId, meal -> meal.getUserId() == userId);
+        return getAllByFilter(userId, meal -> true);
     }
 
     @Override
-    public List<Meal> getAll(int userId, LocalDate startDate, LocalDate endDate) {
+    public List<Meal> getAllByDates(int userId, LocalDate startDate, LocalDate endDate) {
         log.info("getAll by date");
-        return getAllByFilter(userId, (meal -> meal.getUserId() == userId
-                    && DateTimeUtil.isBetween(meal.getDate(), startDate, endDate)));
+        return getAllByFilter(userId, (meal -> DateTimeUtil.isBetween(meal.getDate(), startDate, endDate)));
     }
 
     private List<Meal> getAllByFilter(int userId, Predicate<? super Meal> filter) {
-        return repository.values().stream()
+        return getRepositoryByUser(userId).values().stream()
                 .filter(filter)
                 .sorted(Comparator.comparing(Meal::getDateTime, Comparator.reverseOrder()))
                 .collect(Collectors.toList());
@@ -78,11 +83,15 @@ public class InMemoryMealRepository implements MealRepository {
 
     private Meal getByUser(int id, int userId) {
         Meal meal;
-        if ((meal = repository.get(id)) != null
+        if ((meal = getRepositoryByUser(userId).get(id)) != null
                 && meal.getUserId() == userId) {
             return meal;
         }
         return null;
+    }
+
+    private Map<Integer, Meal> getRepositoryByUser(int userId) {
+        return repository.computeIfAbsent(userId, id -> new HashMap<>());
     }
 }
 

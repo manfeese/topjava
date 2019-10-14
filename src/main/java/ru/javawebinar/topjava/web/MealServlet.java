@@ -31,7 +31,6 @@ public class MealServlet extends HttpServlet {
         super.init(config);
         appCtx = new ClassPathXmlApplicationContext("spring/spring-app.xml");
         mealRestController = appCtx.getBean(MealRestController.class);
-        MealsUtil.MEALS.forEach(mealRestController::create);
     }
 
     @Override
@@ -86,20 +85,7 @@ public class MealServlet extends HttpServlet {
                 LocalDate endDate = getRequestParamData(request, "endDate", LocalDate::parse);
                 LocalTime endTime = getRequestParamData(request, "endTime", LocalTime::parse);
 
-                if (startDate != null) {
-                    request.setAttribute("startDate", startDate);
-                }
-                if (startTime != null) {
-                    request.setAttribute("startTime", startTime);
-                }
-                if (endDate != null) {
-                    request.setAttribute("endDate", endDate);
-                }
-                if (endTime != null) {
-                    request.setAttribute("endTime", endTime);
-                }
-                request.setAttribute("meals", mealRestController.getAll(startDate, startTime, endDate, endTime));
-
+                request.setAttribute("meals", mealRestController.getAllByDates(startDate, startTime, endDate, endTime));
                 request.getRequestDispatcher("/meals.jsp").forward(request, response);
                 break;
             case "all":

@@ -17,6 +17,6 @@ public interface MealRepository {
 
     List<Meal> getAll(int userId);
 
-    List<Meal> getAll(int userId, LocalDate startDate, LocalDate endDate);
+    List<Meal> getAllByDates(int userId, LocalDate startDate, LocalDate endDate);
 }
 

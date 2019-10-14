@@ -35,14 +35,14 @@ public class MealRestController {
                 MealsUtil.DEFAULT_CALORIES_PER_DAY);
     }
 
-    public List<MealTo> getAll(LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime) {
+    public List<MealTo> getAllByDates(LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime) {
         log.info("getAll filtered");
 
         startDate = (startDate == null) ? LocalDate.MIN : startDate;
         startTime = (startTime == null) ? LocalTime.MIN : startTime;
         endDate = (endDate == null) ? LocalDate.MAX : endDate;
         endTime = (endTime == null) ? LocalTime.MAX : endTime;
-        return MealsUtil.getFilteredTos(mealService.getAll(authUserId(), startDate, endDate),
+        return MealsUtil.getFilteredTos(mealService.getAllByDates(authUserId(), startDate, endDate),
                 MealsUtil.DEFAULT_CALORIES_PER_DAY,
                 startTime,
                 endTime);

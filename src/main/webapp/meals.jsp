@@ -32,22 +32,22 @@
         <input type="hidden" name="action" value="filter">
         <div class="block">
             <label>From Date:
-            <input type="date" name="startDate" value="${startDate}">
+            <input type="date" name="startDate" value="${param.startDate}">
             </label>
         </div>
         <div class="block">
             <label>To Date:
-            <input type="date" name="endDate" value="${endDate}">
+            <input type="date" name="endDate" value="${param.endDate}">
             </label>
         </div>
         <div class="block">
             <label>From Time:
-            <input type="time" name="startTime" value="${startTime}">
+            <input type="time" name="startTime" value="${param.startTime}">
             </label>
         </div>
         <div class="block">
             <label>To Time:
-            <input type="time" name="endTime" value="${endTime}">
+            <input type="time" name="endTime" value="${param.endTime}">
             </label>
         </div>
     </form>
