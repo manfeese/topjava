@@ -26,8 +26,7 @@ public class JpaMealRepository implements MealRepository {
         if (meal.isNew()) {
             em.persist(meal);
         } else {
-            Meal entity = em.find(Meal.class, meal.getId());
-            if (entity != null && entity.getUser().getId() != userId) {
+            if (get(meal.getId(), userId) == null) {
                 return null;
             }
             em.merge(meal);
