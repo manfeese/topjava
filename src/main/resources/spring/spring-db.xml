@@ -57,7 +57,7 @@
             <constructor-arg ref="jdbcTemplate"/>
         </bean>
     </beans>
-    <beans profile="datajpa, jpa">
+    <beans profile="datajpa, jpa, default">
 
         <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"
               p:dataSource-ref="dataSource"
@@ -87,7 +87,8 @@
               p:entityManagerFactory-ref="entityManagerFactory"/>
 
     </beans>
-    <beans profile="datajpa">
+    <beans profile="datajpa, default">
+
         <context:component-scan base-package="ru.javawebinar.**.repository.datajpa"/>
         <jpa:repositories base-package="ru.javawebinar.**.repository.datajpa"/>
     </beans>

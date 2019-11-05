@@ -54,4 +54,9 @@ public class DataJpaMealRepository implements MealRepository {
                 getStartInclusive(startDate),
                 getEndExclusive(endDate));
     }
+
+    @Override
+    public Meal getWithUser(int id, int userId) throws UnsupportedOperationException {
+        return crudRepository.getWithUser(id, userId);
+    }
 }

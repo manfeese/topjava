@@ -18,7 +18,7 @@ import static ru.javawebinar.topjava.UserTestData.*;
 public abstract class UserServiceTest extends BaseServiceTest {
 
     @Autowired
-    private UserService service;
+    protected UserService service;
 
     @Autowired
     private CacheManager cacheManager;
@@ -67,6 +67,18 @@ public abstract class UserServiceTest extends BaseServiceTest {
     public void getNotFound() throws Exception {
         thrown.expect(NotFoundException.class);
         service.get(1);
+    }
+
+    @Test
+    public void getWithMeals() throws Exception {
+        thrown.expect(UnsupportedOperationException.class);
+        User user = service.getWithMeals(USER_ID);
+    }
+
+    @Test
+    public void getWithMealsNotFound() throws Exception {
+        thrown.expect(UnsupportedOperationException.class);
+        service.getWithMeals(1);
     }
 
     @Test
