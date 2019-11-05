@@ -167,6 +167,14 @@
             <version>3.13.2</version>
             <scope>test</scope>
         </dependency>
+
+        <!--do not work "hsqldb profile" if this dependency will replace in "postgres profile" only-->
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-jdbc</artifactId>
+            <version>${tomcat.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -188,12 +196,6 @@
                     <groupId>org.postgresql</groupId>
                     <artifactId>postgresql</artifactId>
                     <version>${postgresql.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.tomcat</groupId>
-                    <artifactId>tomcat-jdbc</artifactId>
-                    <version>${tomcat.version}</version>
-                    <scope>provided</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.slf4j</groupId>
