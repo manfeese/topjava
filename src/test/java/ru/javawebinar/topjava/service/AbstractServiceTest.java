@@ -1,6 +1,7 @@
 package ru.javawebinar.topjava.service;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
@@ -37,11 +38,16 @@ abstract public class AbstractServiceTest {
 
     //  Check root cause in JUnit: https://github.com/junit-team/junit4/pull/778
     public <T extends Throwable> void validateRootCause(Runnable runnable, Class<T> exceptionClass) {
+        Assume.assumeTrue(isJpaBased());
         try {
             runnable.run();
             Assert.fail("Expected " + exceptionClass.getName());
         } catch (Exception e) {
             Assert.assertThat(getRootCause(e), instanceOf(exceptionClass));
         }
+    }
+
+    public boolean isJpaBased() {
+        return true;
     }
 }
