@@ -98,7 +98,7 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     private void updateRoles(int userId, Collection<Role> roles) {
-        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?");
+        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", userId);
         insertRoles(userId, roles);
     }
 
