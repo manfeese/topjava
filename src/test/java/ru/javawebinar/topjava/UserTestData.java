@@ -22,10 +22,10 @@ public class UserTestData {
     }
 
     public static User getUpdated() {
-        User updated = new User(USER);
+        User updated = new User(ADMIN);
         updated.setName("UpdatedName");
         updated.setCaloriesPerDay(330);
-        updated.getRoles().add(Role.ROLE_ADMIN);
+        updated.getRoles().remove(Role.ROLE_ADMIN);
         return updated;
     }
 

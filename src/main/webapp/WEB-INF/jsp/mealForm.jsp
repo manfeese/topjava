@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <html>
 <jsp:include page="fragments/headTag.jsp"/>
@@ -8,8 +9,12 @@
 <jsp:include page="fragments/bodyHeader.jsp"/>
 
 <section>
+    <h3><a href="">Home</a></h3>
+    <hr>
+    <c:set var="page">${requestScope['javax.servlet.forward.request_uri']}</c:set>
+    <h2><spring:message code="${fn:endsWith(page, '/create') ? 'mealForm.create' : 'mealForm.update'}"/></h2>
     <jsp:useBean id="meal" type="ru.javawebinar.topjava.model.Meal" scope="request"/>
-    <form method="post" action="meals">
+    <form method="post" action="${page}">
         <input type="hidden" name="id" value="${meal.id}">
         <dl>
             <dt><spring:message code="meal.date"/>:</dt>

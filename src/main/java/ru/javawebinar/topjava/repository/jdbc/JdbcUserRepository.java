@@ -30,39 +30,25 @@ public class JdbcUserRepository implements UserRepository {
         @Override
         public Role mapRow(ResultSet rs, int rowNum) throws SQLException {
             String roleName = rs.getString("role");
-            if (roleName != null) {
-                return Role.valueOf(roleName);
-            }
-            return null;
+            return Role.valueOf(roleName);
         }
     };
     private static final ResultSetExtractor<List<User>> USER_EXTRACTOR = new ResultSetExtractor<List<User>>() {
         public List<User> extractData(ResultSet rs) throws SQLException, DataAccessException {
             Map<Integer, User> userMap = new HashMap<>();
+            List<User> result = new ArrayList<>();
             int row = 0;
             while (rs.next()) {
-                final int finalRow = row;
-                Integer userId = rs.getInt("id");
-                User user = userMap.computeIfAbsent(userId, key -> {
-                    User user1 = null;
-                    try {
-                        user1 = USER_ROW_MAPPER.mapRow(rs, finalRow);
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    user1.setRoles(EnumSet.noneOf(Role.class));
-                    return user1;
+                final User mappedUser = USER_ROW_MAPPER.mapRow(rs, row);
+                User user = userMap.computeIfAbsent(mappedUser.getId(), key -> {
+                    result.add(mappedUser);
+                    mappedUser.setRoles(EnumSet.noneOf(Role.class));
+                    return mappedUser;
                 });
-                if (user == null) {
-                    continue;
-                }
-                Role userRole = ROLE_ROW_MAPPER.mapRow(rs, row);
-                if (userRole != null) {
-                    user.getRoles().add(userRole);
-                }
+                user.getRoles().add(ROLE_ROW_MAPPER.mapRow(rs, row));
                 row++;
             }
-            return userMap.values().stream().collect(Collectors.toList());
+            return result;
         }
     };
 
@@ -112,36 +98,8 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     private void updateRoles(int userId, Collection<Role> roles) {
-        // Select all user's roles from db
-        List<Role> dbRoles = jdbcTemplate.query("SELECT * FROM user_roles WHERE user_id=?", ROLE_ROW_MAPPER, userId);
-        // Copy collection to list
-        List<Role> userRoles = new ArrayList<>(roles);
-
-        // remove all items of userRoles which already exist in database
-        Iterator<Role> dbIterator = dbRoles.iterator();
-        while (dbIterator.hasNext()) {
-            Role role = dbIterator.next();
-            if (userRoles.contains(role)) {
-                userRoles.remove(role);
-                dbIterator.remove();
-            }
-        }
-
-        // delete roles
-        if (!dbRoles.isEmpty()) {
-            jdbcTemplate.batchUpdate("DELETE FROM user_roles WHERE user_id=? AND role=?",
-                    dbRoles,
-                    200,
-                    (ps, argument) -> {
-                        ps.setInt(1, userId);
-                        ps.setString(2, argument.name());
-                    });
-        }
-
-        // insert roles
-        if (!userRoles.isEmpty()) {
-            insertRoles(userId, userRoles);
-        }
+        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?");
+        insertRoles(userId, roles);
     }
 
     @Override
