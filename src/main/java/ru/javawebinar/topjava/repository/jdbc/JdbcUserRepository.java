@@ -31,8 +31,9 @@ public class JdbcUserRepository implements UserRepository {
         for (int row = 0; rs.next(); row++) {
             final User mappedUser = USER_ROW_MAPPER.mapRow(rs, row);
             mappedUser.setRoles(EnumSet.noneOf(Role.class));
-            User user = userMap.computeIfAbsent(mappedUser.getId(), key -> mappedUser);
-            user.getRoles().add(ROLE_ROW_MAPPER.mapRow(rs, row));
+            userMap.computeIfAbsent(mappedUser.getId(), key -> mappedUser)
+                    .getRoles()
+                    .add(ROLE_ROW_MAPPER.mapRow(rs, row));
         }
         return new ArrayList<>(userMap.values());
     };
