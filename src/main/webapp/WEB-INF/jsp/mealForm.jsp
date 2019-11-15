@@ -12,8 +12,8 @@
     <h3><a href="">Home</a></h3>
     <hr>
     <jsp:useBean id="meal" type="ru.javawebinar.topjava.model.Meal" scope="request"/>
-    <h2><spring:message code="${meal.id == null ? 'mealForm.create' : 'mealForm.update'}"/></h2>
-    <form method="post" action="meals/${meal.id == null ? 'create' : 'update'}">
+    <h2><spring:message code="${meal.isNew() ? 'mealForm.create' : 'mealForm.update'}"/></h2>
+    <form method="post" action="meals/${meal.isNew() ? 'create' : 'update'}">
         <input type="hidden" name="id" value="${meal.id}">
         <dl>
             <dt><spring:message code="meal.date"/>:</dt>
