@@ -1,7 +1,6 @@
 package ru.javawebinar.topjava.repository.jdbc;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,41 +15,28 @@ import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Repository
 @Transactional(readOnly = true)
 public class JdbcUserRepository implements UserRepository {
 
     private static final BeanPropertyRowMapper<User> USER_ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
-    private static final RowMapper<Role> ROLE_ROW_MAPPER = new RowMapper<Role>() {
-        @Override
-        public Role mapRow(ResultSet rs, int rowNum) throws SQLException {
-            String roleName = rs.getString("role");
-            return Role.valueOf(roleName);
-        }
+    private static final RowMapper<Role> ROLE_ROW_MAPPER = (rs, rowNum) -> {
+        String roleName = rs.getString("role");
+        return Role.valueOf(roleName);
     };
-    private static final ResultSetExtractor<List<User>> USER_EXTRACTOR = new ResultSetExtractor<List<User>>() {
-        public List<User> extractData(ResultSet rs) throws SQLException, DataAccessException {
-            Map<Integer, User> userMap = new HashMap<>();
-            List<User> result = new ArrayList<>();
-            int row = 0;
-            while (rs.next()) {
-                final User mappedUser = USER_ROW_MAPPER.mapRow(rs, row);
-                User user = userMap.computeIfAbsent(mappedUser.getId(), key -> {
-                    result.add(mappedUser);
-                    mappedUser.setRoles(EnumSet.noneOf(Role.class));
-                    return mappedUser;
-                });
-                user.getRoles().add(ROLE_ROW_MAPPER.mapRow(rs, row));
-                row++;
-            }
-            return result;
+    private static final ResultSetExtractor<List<User>> USER_EXTRACTOR = rs -> {
+        Map<Integer, User> userMap = new LinkedHashMap<>();
+        for (int row = 0; rs.next(); row++) {
+            final User mappedUser = USER_ROW_MAPPER.mapRow(rs, row);
+            mappedUser.setRoles(EnumSet.noneOf(Role.class));
+            User user = userMap.computeIfAbsent(mappedUser.getId(), key -> mappedUser);
+            user.getRoles().add(ROLE_ROW_MAPPER.mapRow(rs, row));
         }
+        return new ArrayList<>(userMap.values());
     };
+    private final static int BATCH_SIZE = 200;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -90,7 +76,7 @@ public class JdbcUserRepository implements UserRepository {
     private void insertRoles(int userId, Collection<Role> roles) {
         jdbcTemplate.batchUpdate("INSERT INTO user_roles (user_id, role) values(?,?)",
                 roles,
-                200,
+                BATCH_SIZE,
                 (ps, argument) -> {
                     ps.setInt(1, userId);
                     ps.setString(2, argument.name());

@@ -11,10 +11,9 @@
 <section>
     <h3><a href="">Home</a></h3>
     <hr>
-    <c:set var="page">${requestScope['javax.servlet.forward.request_uri']}</c:set>
-    <h2><spring:message code="${fn:endsWith(page, '/create') ? 'mealForm.create' : 'mealForm.update'}"/></h2>
     <jsp:useBean id="meal" type="ru.javawebinar.topjava.model.Meal" scope="request"/>
-    <form method="post" action="${page}">
+    <h2><spring:message code="${meal.id == null ? 'mealForm.create' : 'mealForm.update'}"/></h2>
+    <form method="post" action="meals/${meal.id == null ? 'create' : 'update'}">
         <input type="hidden" name="id" value="${meal.id}">
         <dl>
             <dt><spring:message code="meal.date"/>:</dt>

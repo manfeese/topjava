@@ -51,12 +51,10 @@ abstract public class AbstractServiceTest {
         }
     }
 
-    public boolean isJpaBased() {
+    public boolean isJdbcBased() {
         for (String profile : environment.getActiveProfiles()) {
-            switch (profile.toLowerCase()) {
-                case Profiles.JPA:
-                case Profiles.DATAJPA:
-                    return true;
+            if(profile.equalsIgnoreCase(Profiles.JDBC)) {
+                return true;
             }
         }
         return false;
