@@ -1,27 +1,14 @@
 package ru.javawebinar.topjava.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
-import ru.javawebinar.topjava.repository.JpaUtil;
 
 import javax.validation.ConstraintViolationException;
 import java.util.Date;
 import java.util.Set;
 
 abstract public class AbstractJpaUserServiceTest extends AbstractUserServiceTest {
-
-    @Autowired
-    private JpaUtil jpaUtil;
-
-    @BeforeEach
-    @Override
-    void setUp() throws Exception {
-        super.setUp();
-        jpaUtil.clear2ndLevelHibernateCache();
-    }
 
     @Test
     void createWithException() throws Exception {
