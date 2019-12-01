@@ -55,7 +55,7 @@
 <%--                    <td><a href="meals/update?id=${meal.id}"><spring:message code="common.update"/></a></td>--%>
 <%--                    <td><a href="meals/delete?id=${meal.id}"><spring:message code="common.delete"/></a></td>--%>
                     <td><a><span class="fa fa-pencil"></span></a></td>
-                    <td><a class="delete" id="${meal.id}"><span class="fa fa-remove"></span></a></td>
+                    <td><a onclick="deleteRow(${meal.id})"><span class="fa fa-remove"></span></a></td>
                 </tr>
             </c:forEach>
         </table>
