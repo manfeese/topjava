@@ -105,4 +105,10 @@ class MealRestControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(contentJson(getTos(MEALS, USER.getCaloriesPerDay())));
     }
+    @Test
+
+    void nonAuthorized() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get(REST_URL))
+                .andExpect(status().isUnauthorized());
+    }
 }

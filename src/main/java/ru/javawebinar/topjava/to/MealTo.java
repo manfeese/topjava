@@ -1,31 +1,21 @@
 package ru.javawebinar.topjava.to;
 
-import org.hibernate.validator.constraints.Range;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import javax.validation.constraints.*;
 import java.beans.ConstructorProperties;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class MealTo extends BaseTo {
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-    @NotNull
     private final LocalDateTime dateTime;
 
-    @NotBlank
-    @Size(min = 2, max = 100)
     private final String description;
 
-    @Range(min = 10, max = 10000)
-    @NotNull
-    private final Integer calories;
+    private final int calories;
 
-    private final Boolean excess;
+    private final boolean excess;
 
     @ConstructorProperties({"id", "dateTime", "description", "calories", "excess"})
-    public MealTo(Integer id, LocalDateTime dateTime, String description, Integer calories, Boolean excess) {
+    public MealTo(Integer id, LocalDateTime dateTime, String description, int calories, boolean excess) {
         super(id);
         this.dateTime = dateTime;
         this.description = description;
@@ -41,11 +31,11 @@ public class MealTo extends BaseTo {
         return description;
     }
 
-    public Integer getCalories() {
+    public int getCalories() {
         return calories;
     }
 
-    public Boolean isExcess() {
+    public boolean isExcess() {
         return excess;
     }
 
@@ -54,8 +44,8 @@ public class MealTo extends BaseTo {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MealTo that = (MealTo) o;
-        return Objects.equals(calories, that.calories) &&
-                Objects.equals(excess, that.excess) &&
+        return calories == that.calories &&
+                excess == that.excess &&
                 Objects.equals(id, that.id) &&
                 Objects.equals(dateTime, that.dateTime) &&
                 Objects.equals(description, that.description);
